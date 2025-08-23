@@ -20,10 +20,10 @@ RUN apt-get update && \
 # Upgrade pip
 RUN python3 -m pip install --upgrade pip
 
-# Copy application code
-COPY . /app
+# Clone your GitHub repo into /app
+RUN git clone https://github.com/shayanyoosefi/Sam2-labeling.git /app
 
-# Install Python dependencies
+# Install Python dependencies (with PyTorch CUDA wheels)
 RUN pip3 install --no-cache-dir -r requirements.txt \
     --extra-index-url https://download.pytorch.org/whl/cu121
 
