@@ -54,6 +54,7 @@ RUN mkdir -p dataset_images labels
 EXPOSE 5000 7263
 
 # Healthcheck (waits for backend to be ready)
+# Healthcheck (waits for backend to be ready)
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -f http://localhost:5000/api/status || exit 1
 
 # Run both backend and frontend
