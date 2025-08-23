@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 import base64
 
-BACKEND="http://localhost:5000"
+BACKEND="192.168.88.173:7263"
 
 current_filename=None
 click_points=[]
