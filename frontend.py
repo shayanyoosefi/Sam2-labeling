@@ -9,6 +9,7 @@ current_filename=None
 click_points=[]
 
 # -------- Helpers --------
+# -------- Helpers --------
 def get_images():
     try:
         r=requests.get(f"{BACKEND}/api/images")
