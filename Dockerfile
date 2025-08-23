@@ -46,7 +46,6 @@ RUN mkdir -p dataset_images labels && \
 
 # Copy source code
 COPY backend.py frontend.py ./
-COPY models ./models
 
 # Create folders for runtime
 RUN mkdir -p dataset_images labels
