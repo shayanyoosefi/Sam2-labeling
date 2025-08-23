@@ -28,9 +28,9 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration
-IMAGES_FOLDER = "dataset_images"
-SAM2_CHECKPOINT = "sam2_hiera_large.pt"
-SAM2_CONFIG = "sam2_hiera_l"
+IMAGES_FOLDER = os.getenv("IMAGES_FOLDER", "dataset_images")
+SAM2_CHECKPOINT = os.getenv("SAM2_CHECKPOINT", "sam2_hiera_large.pt")
+SAM2_CONFIG = os.getenv("SAM2_CONFIG", "sam2_hiera_l")
 
 # Global variables
 sam2_predictor = None
@@ -72,6 +72,26 @@ def get_images_from_folder():
             })
 
     return images
+
+@app.route('/api/upload_images', methods=['POST'])
+def upload_images():
+    """Handle image folder upload"""
+    if 'files' not in request.files:
+        return jsonify({'success': False, 'error': 'No files part'}), 400
+
+    uploaded_files = request.files.getlist('files')
+    if not uploaded_files or uploaded_files[0].filename == '':
+        return jsonify({'success': False, 'error': 'No selected file'}), 400
+
+    os.makedirs(IMAGES_FOLDER, exist_ok=True)
+    uploaded_count = 0
+    for file in uploaded_files:
+        if file and file.filename:
+            filename = file.filename
+            file_path = os.path.join(IMAGES_FOLDER, filename)
+            file.save(file_path)
+            uploaded_count += 1
+    return jsonify({'success': True, 'message': f'Successfully uploaded {uploaded_count} images'})
 
 @app.route('/api/images', methods=['GET'])
 def get_images():
@@ -824,6 +844,26 @@ with gr.Blocks(title="🎯 SAM2 Dataset Viewer", theme=gr.themes.Soft()) as demo
                 value="Ready to manage labels"
             )
 
+        # New tab for image upload
+        with gr.TabItem("📤 Image Upload", id="upload_tab"):
+            gr.Markdown("### 🚀 Upload New Images")
+            gr.Markdown("Upload a folder of images to be used for segmentation.")
+
+            with gr.Row():
+                upload_folder_input = gr.File(
+                    label="Select Image Folder",
+                    file_count="multiple",
+                    file_types=[".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"],
+                    interactive=True
+                )
+                upload_btn = gr.Button("⬆️ Upload Images", variant="primary")
+
+            upload_status = gr.Textbox(
+                label="Upload Status",
+                interactive=False,
+                value=""
+            )
+
     # Status and download section
     with gr.Row():
         operation_status = gr.Textbox(
@@ -904,6 +944,48 @@ with gr.Blocks(title="🎯 SAM2 Dataset Viewer", theme=gr.themes.Soft()) as demo
     download_btn.click(
         download_results,
         outputs=[gr.File()]
+    )
+
+    # New function to handle image uploads
+    def handle_image_upload(files):
+        if not files:
+            return "No files selected for upload."
+        
+        # Create a list of (filename, file_object) tuples
+        file_data = []
+        for file_obj in files:
+            try:
+                # Gradio's file object has .name attribute for path
+                # And can be read like a normal file
+                file_data.append(('files', (os.path.basename(file_obj.name), open(file_obj.name, 'rb'), 'image/*')))
+            except Exception as e:
+                return f"Error processing file {file_obj.name}: {e}"
+
+        try:
+            response = requests.post("http://localhost:5000/api/upload_images", files=file_data)
+            if response.status_code == 200:
+                data = response.json()
+                if data['success']:
+                    return data['message']
+                else:
+                    return f"Upload failed: {data.get('error', 'Unknown error')}"
+            else:
+                return f"Backend error during upload: {response.status_code}"
+        except Exception as e:
+            return f"Error during upload: {str(e)}"
+        finally:
+            # Close file handles after request
+            for _, (filename, f, mime_type) in file_data:
+                f.close()
+
+    # Connect upload events
+    upload_btn.click(
+        handle_image_upload,
+        inputs=[upload_folder_input],
+        outputs=[upload_status]
+    ).then(
+        refresh_image_list,
+        outputs=[image_dropdown]
     )
 
 # Launch the interface

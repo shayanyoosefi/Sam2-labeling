@@ -24,20 +24,7 @@ RUN python3 -m pip install --upgrade pip
 COPY . /app
 
 # Install Python dependencies
-RUN pip3 install --no-cache-dir \
-    flask \
-    flask-cors \
-    opencv-python \
-    pillow \
-    torch==2.5.1+cu121 \
-    torchvision==0.20.1+cu121 \
-    gradio \
-    git+https://github.com/facebookresearch/segment-anything-2.git \
-    numpy \
-    tqdm \
-    hydra-core \
-    iopath \
-    portalocker \
+RUN pip3 install --no-cache-dir -r requirements.txt \
     --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Download SAM2 model checkpoint
