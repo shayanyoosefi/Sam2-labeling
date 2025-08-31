@@ -63,7 +63,8 @@ def upload_files(files):
     try:
         r=requests.post(f"{BACKEND}/api/upload_images",files=data)
     finally:
-        for _,f,_ in data: f.close()
+        for _, file_tuple in data:
+            file_tuple[1].close()   # close file object properly
     if r.status_code==200: return r.json().get("message")
     return "Upload failed"
 
@@ -106,8 +107,13 @@ with gr.Blocks(title="SAM2 Labeler") as demo:
     seg_btn.click(segment,outputs=[masks_out,msg_out])
     reset_btn.click(reset,outputs=[msg_out])
     save_btn.click(save,outputs=[msg_out])
-    upload_btn.click(upload_files,inputs=[upload_input],outputs=[upload_status]).then(
-        lambda:gr.Dropdown.update(choices=get_images()),outputs=[img_dropdown]
+    upload_btn.click(
+        upload_files,
+        inputs=[upload_input],
+        outputs=[upload_status]
+    ).then(
+        lambda: gr.update(choices=get_images()),
+        outputs=[img_dropdown]
     )
     restart_btn.click(restart_backend,outputs=[restart_status])
 
