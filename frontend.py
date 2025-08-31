@@ -106,4 +106,4 @@ with gr.Blocks(title="SAM2 Labeler") as demo:
     )
     restart_btn.click(restart_backend,outputs=[restart_status])
 
-demo.launch(server_name="0.0.0.0",server_port=7263,share=True)
+demo.launch(server_name="0.0.0.0",server_port=7263,share=False)
