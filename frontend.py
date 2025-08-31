@@ -82,7 +82,12 @@ with gr.Blocks(title="SAM2 Labeler") as demo:
     restart_status=gr.Textbox(label="Backend Status")
 
     with gr.Tab("Segmentation"):
-        img_dropdown=gr.Dropdown(choices=get_images(),label="Select Image")
+        images = get_images()
+        img_dropdown = gr.Dropdown(
+            choices=images,
+            label="Select Image",
+            value=images[0][1] if images else None  # pick first image if available
+        )
         img_display=gr.Image(type="pil",interactive=True)
         seg_btn=gr.Button("Apply Segmentation")
         masks_out=gr.Gallery(label="Masks")
